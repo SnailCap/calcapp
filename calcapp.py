@@ -1,7 +1,8 @@
+from statistics import mode
 from tkinter import *
 from tkinter import font
 from PIL import ImageTk, Image
-import math
+from math import *
 import os
 
 #create window
@@ -17,17 +18,18 @@ canvas.pack()
 #name "line" is the field where user input is appearing as numbers and operation signs
 
 #GLOBAL SUPPORT VARIABLES
-sign_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, '+', '-', '×', '÷', '2', '^1/2', '.', '(', ')'] #list of all signs to show on the line
-math_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, '+', '-', '*', '/', '**2', '**(1/2)', '.', '(', ')'] #list of all signs that can be added to the 'mathline' list
+sign_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, '+', '-', '×', '÷', '2', '^1/2', '.', '(', ')', 'sin(', 'cos('] #list of all signs to show on the line
+math_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, '+', '-', '*', '/', '**2', '**(1/2)', '.', '(', ')', 'sin(', 'cos('] #list of all signs that can be added to the 'mathline' list
 standart_operation_sign_list = ['+', '-', '×', '÷'] #list of standart operation signs
-all_math_operation_sign_list = ['+', '-', '*', '/', '**2', '**(1/2)'] #list of operation signs for math function
 all_animation_operation_sign_list = ['+', '-', '×', '÷', '2', '^1/2'] #list of operation signs for animation function
+all_math_operation_sign_list = ['+', '-', '*', '/', '**2', '**(1/2)'] #list of operation signs for math function
+all_trigonometry_sign_list = ['sin(', 'cos(']
 line = [] #list of elements (labels) on the line
 mathline = []
 global equal_state
 equal_state = 0
 global x
-sci_notation_point = 18 #point from which amount of digits in the answer programm converts number to a scientific notation
+
 global error_statek0
 error_state = 0
 
@@ -55,6 +57,7 @@ power2_w=8 * line_elements_size_multiplier #width of power 2
 power2_font='Times', 9
 sqrt_w = 30 * line_elements_size_multiplier #width of square root
 bracket_w = 6 * line_elements_size_multiplier #width of brackets
+trigonometry_w = 37 #width of trigonometry functions (sin, cos etc)
 sign_font_size = 14
 sign_font_font = 'Times'
 sign_font = sign_font_font, sign_font_size
@@ -64,6 +67,7 @@ answer_ypos = 42
 answer_h = 40
 answer_w = 170
 answer_font = sign_font_font, sign_font_size
+error_font = 'Helvetica', 14
 #BUTTONS
 btn_w = 100 #width of buttons
 btn_h = 66 #high of buttons
@@ -82,12 +86,14 @@ btn_row_6 = 234
 start_label_xpos = 10 #point from where the signs on the line are being created
 initial_zero_xpos = 11 #position of initial zero
 x_line_limit = 350 #limits the amount of signs can be added to the line in pixels
+sci_notation_point = 15 #point from which amount of digits in the answer programm converts number to a scientific notation
+round_precision = 12 #rounding presicion of float answers
 
 #print useful stuff in terminal
+print('--------------------------------------------------------------------')
 def terminal():
-   print('--------------------------------------------------------------------')
-   print('1. mathline:', mathline)
-   print('2. line:', line)
+   print('1. initial_zero.winfo_exists:', initial_zero.winfo_exists())
+   print('2. mode_state: ', mode_state)
    try:
       print('3. res_list:', res_list)
    except:
@@ -104,9 +110,10 @@ def terminal():
       print("7. res_show: None")
    try:
       print('8. ans_btn_list:', ans_btn_list)
-   except:
+   except NameError:
       print('8. ans_btn_list: []')
-   print('9. initial_zero.winfo_exists:', initial_zero.winfo_exists())
+   print('9. mathline:', mathline)
+   print('10. line:', line)
    print('--------------------------------------------------------------------')
 
 #animating function
@@ -124,8 +131,7 @@ def animation(btn):
       else:
          for i2 in sign_list:
             if btn == i2:
-               equal_clear()
-               
+               equal_clear()       
    #remove initial zero
    initial_zero.destroy()
 
@@ -133,83 +139,93 @@ def animation(btn):
    try:
       if type(btn) == int and mathline[-1]=='**2':
          return
-   except IndexError:
+   except:
       pass
    #in case if user tries to add operation to a operation
    try:
       if btn in all_animation_operation_sign_list and mathline[-1] in all_math_operation_sign_list and mathline[-1] != '**2':
          line[-1].destroy()
          del line[-1]
-   except IndexError:
+   except:
+      pass
+   #in case if user tries to add trigonometry operation to unexpected sign
+   try:
+      if btn in all_trigonometry_sign_list and mathline[-1] not in all_math_operation_sign_list:
+         if mathline[-1] != '(':
+            return
+   except:
       pass
 
    #adding signs to the line
    for i in sign_list:
       if btn == i and type(i) == int and line[-1].winfo_x() < x_line_limit: #for numbers
          line.append('')
-         line[len(line)-1] = Label(line_frame, text=str(btn), font=(sign_font), bg=sign_color)
-         line[len(line)-1].place(x = line[-2].winfo_x() + line[-2].winfo_width(), y=ypos, height=h, width=num_w)
+         line[-1] = Label(line_frame, text=str(btn), font=(sign_font), bg=sign_color)
+         line[-1].place(x = line[-2].winfo_x() + line[-2].winfo_width(), y=ypos, height=h, width=num_w)
       if btn == i and btn == '.' and line[-1].winfo_x() < x_line_limit: #for point
          if equal_state == 1: #to operate answer straightaway
             ans()
             line.append('')
-            line[len(line)-1] = Label(line_frame, text=str(btn), font=(sign_font), bg=sign_color)
-            line[len(line)-1].place(x = ans_xpos, y=ypos, height=h, width=point_w)         
+            line[-1] = Label(line_frame, text=str(btn), font=(sign_font), bg=sign_color)
+            line[-1].place(x = ans_xpos, y=ypos, height=h, width=point_w)         
          else:
             if len(mathline) == 0: #for adding point to initial 0 on the line
                animation(0)
                math(0)
                line.append('')
-               line[len(line)-1] = Label(line_frame, text=str(btn), font=(sign_font), anchor='e', bg=sign_color)
-               line[len(line)-1].place(x = initial_zero_xpos + num_w, y=ypos, height=h, width=point_w)
+               line[-1] = Label(line_frame, text=str(btn), font=(sign_font), anchor='e', bg=sign_color)
+               line[-1].place(x = initial_zero_xpos + num_w, y=ypos, height=h, width=point_w)
             else: #all other cases
                line.append('')
-               line[len(line)-1] = Label(line_frame, text=str(btn), font=(sign_font), anchor='e', bg=sign_color)
-               line[len(line)-1].place(x = line[-2].winfo_x() + line[-2].winfo_width(), y=ypos, height=h, width=point_w)
+               line[-1] = Label(line_frame, text=str(btn), font=(sign_font), anchor='e', bg=sign_color)
+               line[-1].place(x = line[-2].winfo_x() + line[-2].winfo_width(), y=ypos, height=h, width=point_w)
       if btn == i and btn in standart_operation_sign_list and line[-1].winfo_x() < x_line_limit: #for operation signs
          if equal_state == 1: #to operate answer straightaway
             ans()
             line.append('')
-            line[len(line)-1] = Label(line_frame, text=str(btn), font=(sign_font), bg=sign_color)
-            line[len(line)-1].place(x = ans_xpos, y=ypos, height=h, width=operation_w)
+            line[-1] = Label(line_frame, text=str(btn), font=(sign_font), bg=sign_color)
+            line[-1].place(x = ans_xpos, y=ypos, height=h, width=operation_w)
          else:
             if equal_state == 0 and len(line) == 1: #if operation sign is the first appearing on the line, so it will be the same size as a digit
                line.append('')
-               line[len(line)-1] = Label(line_frame, text=str(btn), font=(sign_font), bg=sign_color)
-               line[len(line)-1].place(x = line[-2].winfo_x() + line[-2].winfo_width(), y=ypos, height=h, width=num_w+1)
+               line[-1] = Label(line_frame, text=str(btn), font=(sign_font), bg=sign_color)
+               line[-1].place(x = line[-2].winfo_x() + line[-2].winfo_width(), y=ypos, height=h, width=num_w+1)
             else: #other cases
                line.append('')
-               line[len(line)-1] = Label(line_frame, text=str(btn), font=(sign_font), bg=sign_color)
-               line[len(line)-1].place(x = line[-2].winfo_x() + line[-2].winfo_width(), y=ypos, height=h, width=operation_w)     
+               line[-1] = Label(line_frame, text=str(btn), font=(sign_font), bg=sign_color)
+               line[-1].place(x = line[-2].winfo_x() + line[-2].winfo_width(), y=ypos, height=h, width=operation_w)     
       if btn == i and btn == '2' and line[-1].winfo_x() < x_line_limit: #for power 2
          if equal_state == 1: #to power 2 answer straightaway
             ans()
             line.append('')
-            line[len(line)-1] = Label(line_frame, text=str(btn), font=(power2_font), anchor=NE, bg=sign_color)
-            line[len(line)-1].place(x = ans_xpos, y=ypos, height=h, width=power2_w) 
+            line[-1] = Label(line_frame, text=str(btn), font=(power2_font), anchor=NE, bg=sign_color)
+            line[-1].place(x = ans_xpos, y=ypos, height=h, width=power2_w) 
          else: #other cases      
             line.append('')
-            line[len(line)-1] = Label(line_frame, text=str(btn), font=(power2_font), anchor=NE, bg=sign_color)
-            line[len(line)-1].place(x = line[-2].winfo_x() + line[-2].winfo_width(), y=ypos, height=h, width=power2_w)
+            line[-1] = Label(line_frame, text=str(btn), font=(power2_font), anchor=NE, bg=sign_color)
+            line[-1].place(x = line[-2].winfo_x() + line[-2].winfo_width(), y=ypos, height=h, width=power2_w)
       if btn == i and btn == '^1/2' and line[-1].winfo_x() < x_line_limit: #for sqrt
          if equal_state == 1: #to sqrt answer straightaway
             ans()
             line.append('')
-            line[len(line)-1] = Label(line_frame, text=str(btn), font=(sign_font), bg=sign_color)
-            line[len(line)-1].place(x = ans_xpos, y=ypos, height=h, width=sqrt_w) 
+            line[-1] = Label(line_frame, text=str(btn), font=(sign_font), bg=sign_color)
+            line[-1].place(x = ans_xpos, y=ypos, height=h, width=sqrt_w) 
          else: #other cases        
             line.append('')
-            line[len(line)-1] = Label(line_frame, text=str(btn), font=(sign_font), bg=sign_color)
-            line[len(line)-1].place(x = line[-2].winfo_x() + line[-2].winfo_width(), y=ypos, height=h, width=sqrt_w)
+            line[-1] = Label(line_frame, text=str(btn), font=(sign_font), bg=sign_color)
+            line[-1].place(x = line[-2].winfo_x() + line[-2].winfo_width(), y=ypos, height=h, width=sqrt_w)
       if btn == i and btn == '(' and line[-1].winfo_x() < x_line_limit: #for right bracket
          line.append('')
-         line[len(line)-1] = Label(line_frame, text=str(btn), font=(sign_font), bg=sign_color)
-         line[len(line)-1].place(x = line[-2].winfo_x() + line[-2].winfo_width(), y=ypos, height=h, width=bracket_w)
+         line[-1] = Label(line_frame, text=str(btn), font=(sign_font), bg=sign_color)
+         line[-1].place(x = line[-2].winfo_x() + line[-2].winfo_width(), y=ypos, height=h, width=bracket_w)
       if btn == i and btn == ')' and line[-1].winfo_x() < x_line_limit: #for left bracket
          line.append('')
-         line[len(line)-1] = Label(line_frame, text=str(btn), font=(sign_font), bg=sign_color)
-         line[len(line)-1].place(x = line[-2].winfo_x() + line[-2].winfo_width(), y=ypos, height=h, width=bracket_w)
-
+         line[-1] = Label(line_frame, text=str(btn), font=(sign_font), bg=sign_color)
+         line[-1].place(x = line[-2].winfo_x() + line[-2].winfo_width(), y=ypos, height=h, width=bracket_w)
+      if btn == i and btn in all_trigonometry_sign_list:
+         line.append('')
+         line[-1] = Label(line_frame, text=str(btn), font=(sign_font), bg=sign_color)
+         line[-1].place(x = line[-2].winfo_x() + line[-2].winfo_width(), y=ypos, height=h, width=trigonometry_w)
    #clear the line
    if btn == 'C':
       line_clear()
@@ -247,10 +263,16 @@ def math(btn):
          del mathline[-1]
    except IndexError:
       pass
+   #in case if user tries to add trigonometry operation to unexpected sign
+   try:
+      if btn in all_trigonometry_sign_list and mathline[-1] not in all_math_operation_sign_list:
+         if mathline[-1] != '(':
+            return
+   except:
+      pass
 
    #adds numbers and operations to the 'mathline' list
    for i in math_list:
-
       #adding signs to mathline
       if btn==i and line[-1].winfo_x() < x_line_limit:
          mathline.append(btn)
@@ -262,26 +284,17 @@ def math(btn):
       #create answer label
       try:
          res_math = eval(res_string) #transform string into math expression to count the answer
+         if type(res_math) == float:
+            res_math = round(res_math, round_precision)
          res_list = [str(i) for i in str(res_math)] #transform answer to a list
-         print('4. res__eval_list:', res_list)
          if len(res_list) > sci_notation_point:
             res_show = sci_notation(res_math)
          else:
             res_show = res_math
          answer_label = Label(line_frame, text=str(res_show), font=(answer_font), bg=line_color)
          answer_label.place(x=answer_xpos, y=answer_ypos, height=answer_h, width=answer_w)           
-      except SyntaxError: #for the expression ended with an operation sign
-         error_label = Label(line_frame, text='ERROR', font=(answer_font), bg=line_color)
-         error_label.place(x=answer_xpos, y=answer_ypos, height=answer_h, width=answer_w)
-         error_state = 1
-         print('ERROR')
-      except ZeroDivisionError: #in case of zero divison
-         error_label = Label(line_frame, text='ERROR', font=(answer_font), bg=line_color)
-         error_label.place(x=answer_xpos, y=answer_ypos, height=answer_h, width=answer_w)
-         error_state = 1
-         print('ERROR')
-      except OverflowError:
-         error_label = Label(line_frame, text='ERROR', font=(answer_font), bg=line_color)
+      except: #for any mistakes
+         error_label = Label(line_frame, text='Syntax ERROR', font=(error_font), bg=line_color)
          error_label.place(x=answer_xpos, y=answer_ypos, height=answer_h, width=answer_w)
          error_state = 1
          print('ERROR')
@@ -482,7 +495,53 @@ def bind(btn_name, mode, sign, mathsign, keyboard1='None', keyboard2='None'):
       if keyboard2 != 'None':
          root.bind(keyboard2, lambda btn: [animation(btn=sign), math(btn=mathsign)])
 
+mode_state = 1
+#buttons of mode 1
+def buttons_mode1():
+   global btn_power2
+   global btn_sqroot
+   #add new buttons
+   btn_power2 = Button(frame, text='x^2', bg=btn_color, font=(btn_font), command=lambda: [animation('2'), math('**2')])
+   btn_power2.place (x=btn_column_2, y=btn_row_5, height=btn_h, width=btn_w)
+   btn_power2.bind("<Enter>", lambda name: button_hover(name = btn_power2))
+   btn_power2.bind("<Leave>", lambda name: button_hover_leave(name = btn_power2))
+   btn_sqroot = Button(frame, text='√x', bg=btn_color, font=(btn_font), command=lambda: [animation('^1/2'), math('**(1/2)')])
+   btn_sqroot.place (x=btn_column_3, y=btn_row_5, height=btn_h, width=btn_w)
+   btn_sqroot.bind("<Enter>", lambda name: button_hover(name = btn_sqroot))
+   btn_sqroot.bind("<Leave>", lambda name: button_hover_leave(name = btn_sqroot))
+#buttons of mode 2
+def buttons_mode2():
+   global btn_sin
+   global btn_cos
+   #add new buttons
+   btn_sin = Button(frame, text='sin', bg=btn_color, font=(btn_font), command=lambda: [animation('sin('), math('sin(')])
+   btn_sin.place (x=btn_column_2, y=btn_row_5, height=btn_h, width=btn_w)
+   btn_sin.bind("<Enter>", lambda name: button_hover(name = btn_sin))
+   btn_sin.bind("<Leave>", lambda name: button_hover_leave(name = btn_sin))
+   btn_cos = Button(frame, text='cos', bg=btn_color, font=(btn_font), command=lambda: [animation('cos('), math('cos(')])
+   btn_cos.place (x=btn_column_3, y=btn_row_5, height=btn_h, width=btn_w)
+   btn_cos.bind("<Enter>", lambda name: button_hover(name = btn_cos))
+   btn_cos.bind("<Leave>", lambda name: button_hover_leave(name = btn_cos))
+#mode button functionality
+def mode_switch():
+   global mode_state
+   if mode_state == 1:
+      #destroy previous mode answers
+      btn_power2.destroy()
+      btn_sqroot.destroy()
+      buttons_mode2()
+      mode_state = 2
+      return
+   if mode_state == 2:
+      #destroy previous mode answers
+      btn_sin.destroy()
+      btn_cos.destroy()
+      buttons_mode1()
+      mode_state = 1
+      return
+
 #buttons
+buttons_mode1()
 btn_1 = Button(frame, text='1', bg=btn_color, font=(btn_font), command=lambda: [animation(1), math(1)])
 btn_1.place(x=btn_column_1, y=btn_row_2, height=btn_h, width=btn_w)
 bind(btn_1, 'both', 1, 1, '1')
@@ -538,15 +597,7 @@ btn_backspace.bind("<Enter>", lambda name: button_hover(name = btn_backspace))
 btn_backspace.bind("<Leave>", lambda name: button_hover_leave(name = btn_backspace))
 btn_clear = Button(frame, text='C', bg=btn_color, font=(btn_font), command=lambda: [animation('C'), math('C')])
 btn_clear.place (x=btn_column_3, y=btn_row_6, height=btn_h, width=btn_w)
-bind(btn_clear, 'both', 'C', 'C', 'c')
-btn_power2 = Button(frame, text='x^2', bg=btn_color, font=(btn_font), command=lambda: [animation('2'), math('**2')])
-btn_power2.place (x=btn_column_2, y=btn_row_5, height=btn_h, width=btn_w)
-btn_power2.bind("<Enter>", lambda name: button_hover(name = btn_power2))
-btn_power2.bind("<Leave>", lambda name: button_hover_leave(name = btn_power2))
-btn_sqroot = Button(frame, text='√x', bg=btn_color, font=(btn_font), command=lambda: [animation('^1/2'), math('**(1/2)')])
-btn_sqroot.place (x=btn_column_3, y=btn_row_5, height=btn_h, width=btn_w)
-btn_sqroot.bind("<Enter>", lambda name: button_hover(name = btn_sqroot))
-btn_sqroot.bind("<Leave>", lambda name: button_hover_leave(name = btn_sqroot))
+bind(btn_clear, 'both', 'C', 'C', 'c', '<Delete>')
 btn_Ans = Button(frame, text='Ans', bg=btn_color, font=(btn_font), command=ans)
 btn_Ans.place (x=btn_column_1, y=btn_row_1, height=btn_h, width=btn_w)
 btn_Ans.bind("<Enter>", lambda name: button_hover(name = btn_Ans))
@@ -557,7 +608,7 @@ bind(btn_bracket_right, 'both', '(', '(', '<(>')
 btn_bracket_left = Button(frame, text=')', bg=btn_color, font=(btn_font), command=lambda: [animation(')'), math(')')])
 btn_bracket_left.place (x=btn_column_2, y=btn_row_6, height=btn_h, width=btn_w)
 bind(btn_bracket_left, 'both', ')', ')', '<)>')
-btn_mode = Button(frame, text='mode', bg=btn_color, font=(btn_font))
+btn_mode = Button(frame, text='mode', bg=btn_color, font=(btn_font), command=mode_switch)
 btn_mode.place (x=btn_column_1, y=btn_row_5, height=btn_h, width=btn_w)
 btn_mode.bind("<Enter>", lambda name: button_hover(name = btn_mode))
 btn_mode.bind("<Leave>", lambda name: button_hover_leave(name = btn_mode))
