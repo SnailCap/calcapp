@@ -18,11 +18,11 @@ canvas.pack()
 #name "line" is the field where user input is appearing as numbers and operation signs
 
 #GLOBAL SUPPORT VARIABLES
-sign_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, '+', '-', '×', '÷', '2', '^1/2', '.', '(', ')', 'sin(', 'cos('] #list of all signs to show on the line
-math_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, '+', '-', '*', '/', '**2', '**(1/2)', '.', '(', ')', 'sin(', 'cos('] #list of all signs that can be added to the 'mathline' list
+sign_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, '+', '-', '×', '÷', '2', '√(', '.', '(', ')', 'sin(', 'cos('] #list of all signs to show on the line
+math_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, '+', '-', '*', '/', '**2', 'sqrt(', '.', '(', ')', 'sin(', 'cos('] #list of all signs that can be added to the 'mathline' list
 standart_operation_sign_list = ['+', '-', '×', '÷'] #list of standart operation signs
-all_animation_operation_sign_list = ['+', '-', '×', '÷', '2', '^1/2'] #list of operation signs for animation function
-all_math_operation_sign_list = ['+', '-', '*', '/', '**2', '**(1/2)'] #list of operation signs for math function
+all_animation_operation_sign_list = ['+', '-', '×', '÷', '2', '√('] #list of operation signs for animation function
+all_math_operation_sign_list = ['+', '-', '*', '/', '**2', 'sqrt('] #list of operation signs for math function
 all_trigonometry_sign_list = ['sin(', 'cos(']
 line = [] #list of elements (labels) on the line
 mathline = []
@@ -55,9 +55,9 @@ point_w=6 * line_elements_size_multiplier #width of point
 operation_w=22 * line_elements_size_multiplier #width of operation signs
 power2_w=8 * line_elements_size_multiplier #width of power 2
 power2_font='Times', 9
-sqrt_w = 30 * line_elements_size_multiplier #width of square root
+sqrt_w = 15 * line_elements_size_multiplier #width of square root
 bracket_w = 6 * line_elements_size_multiplier #width of brackets
-trigonometry_w = 37 #width of trigonometry functions (sin, cos etc)
+trigonometry_w = 27 * line_elements_size_multiplier #width of trigonometry functions (sin, cos etc)
 sign_font_size = 14
 sign_font_font = 'Times'
 sign_font = sign_font_font, sign_font_size
@@ -87,7 +87,7 @@ start_label_xpos = 10 #point from where the signs on the line are being created
 initial_zero_xpos = 11 #position of initial zero
 x_line_limit = 350 #limits the amount of signs can be added to the line in pixels
 sci_notation_point = 15 #point from which amount of digits in the answer programm converts number to a scientific notation
-round_precision = 12 #rounding presicion of float answers
+round_precision = 10 #rounding presicion of float answers
 
 #print useful stuff in terminal
 print('--------------------------------------------------------------------')
@@ -126,7 +126,7 @@ def animation(btn):
 
    #remove answer label when user insert any sign ater last calculation to start a new calculation
    if equal_state == 1:
-      if btn in standart_operation_sign_list or btn == '^2' or btn == '^1/2' or btn == '.':
+      if btn in standart_operation_sign_list or btn == '^2' or btn == '√(' or btn == '.':
          print("OPERATING WITH THE ANSWER...")
       else:
          for i2 in sign_list:
@@ -204,7 +204,7 @@ def animation(btn):
             line.append('')
             line[-1] = Label(line_frame, text=str(btn), font=(power2_font), anchor=NE, bg=sign_color)
             line[-1].place(x = line[-2].winfo_x() + line[-2].winfo_width(), y=ypos, height=h, width=power2_w)
-      if btn == i and btn == '^1/2' and line[-1].winfo_x() < x_line_limit: #for sqrt
+      if btn == i and btn == '√(' and line[-1].winfo_x() < x_line_limit: #for sqrt
          if equal_state == 1: #to sqrt answer straightaway
             ans()
             line.append('')
@@ -284,9 +284,12 @@ def math(btn):
       #create answer label
       try:
          res_math = eval(res_string) #transform string into math expression to count the answer
-         if type(res_math) == float:
+         if res_math.is_integer() == True: #check if answer has .0 float and transform it to an integer
+            res_math = int(res_math)
+         if type(res_math) == float: #round answer with lot of decimals numbers
             res_math = round(res_math, round_precision)
-         res_list = [str(i) for i in str(res_math)] #transform answer to a list
+         #transform answer to a list
+         res_list = [str(i) for i in str(res_math)] 
          if len(res_list) > sci_notation_point:
             res_show = sci_notation(res_math)
          else:
@@ -505,7 +508,7 @@ def buttons_mode1():
    btn_power2.place (x=btn_column_2, y=btn_row_5, height=btn_h, width=btn_w)
    btn_power2.bind("<Enter>", lambda name: button_hover(name = btn_power2))
    btn_power2.bind("<Leave>", lambda name: button_hover_leave(name = btn_power2))
-   btn_sqroot = Button(frame, text='√x', bg=btn_color, font=(btn_font), command=lambda: [animation('^1/2'), math('**(1/2)')])
+   btn_sqroot = Button(frame, text='√x', bg=btn_color, font=(btn_font), command=lambda: [animation('√('), math('sqrt(')])
    btn_sqroot.place (x=btn_column_3, y=btn_row_5, height=btn_h, width=btn_w)
    btn_sqroot.bind("<Enter>", lambda name: button_hover(name = btn_sqroot))
    btn_sqroot.bind("<Leave>", lambda name: button_hover_leave(name = btn_sqroot))
