@@ -3,7 +3,7 @@ from tkinter import *
 from tkinter import font
 from PIL import ImageTk, Image
 from math import *
-import os
+
 
 #create window
 root = Tk()
@@ -18,12 +18,60 @@ canvas.pack()
 #name "line" is the field where user input is appearing as numbers and operation signs
 
 #GLOBAL SUPPORT VARIABLES
-sign_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, '+', '-', '×', '÷', '2', '√(', '.', '(', ')', 'sin(', 'cos('] #list of all signs to show on the line
-math_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, '+', '-', '*', '/', '**2', 'sqrt(', '*sqrt(', '.', '(', ')', 'sin(', 'cos('] #list of all signs that can be added to the 'mathline' list
+
+#list of all signs to show on the line
+sign_list = [
+0, 
+1, 
+2, 
+3, 
+4, 
+5, 
+6, 
+7, 
+8, 
+9, 
+'+', 
+'-', 
+'×', 
+'÷', 
+'2', 
+'√(', 
+'.', 
+'(', 
+')', 
+'sin(', 
+'cos('
+]
+#list of all signs that can be added to the 'mathline' list
+math_list = [
+0, 
+1, 
+2, 
+3, 
+4, 
+5, 
+6, 
+7, 
+8, 
+9, 
+'+', 
+'-', 
+'*', 
+'/', 
+'**2', 
+'sqrt(', 
+'*sqrt(', 
+'.', 
+'(', ')', 
+'sin(', 
+'cos('
+]
 standart_operation_sign_list = ['+', '-', '×', '÷'] #list of standart operation signs
 all_animation_operation_sign_list = ['+', '-', '×', '÷', '2'] #list of operation signs for animation function
 all_math_operation_sign_list = ['+', '-', '*', '/', '**2'] #list of operation signs for math function
 all_trigonometry_sign_list = ['sin(', 'cos(']
+global line
 line = [] #list of elements (labels) on the line
 mathline = []
 global equal_state
@@ -38,7 +86,7 @@ LINE_COLOR = 'white'
 SIGN_COLOR = LINE_COLOR
 BTN_COLOR = 'white'
 BTN_HOVER_COLOR = '#DFDFDF'
-#SIZE AND POSITION OF BLACK LINE
+#SIZE AND POSITION OF BLACK LINE FOR DESIGN
 BLACK_LINE_HEIGHT = 1
 BLACK_LINE_XPOS = 0
 #SIZE AND POSITION OF THE LINE
@@ -112,6 +160,11 @@ def terminal():
       print('8. ans_btn_list: []')
    print('9. mathline:', mathline)
    print('10. line:', line)
+   try:
+      print(line[-1].winfo_x() + line[-1].winfo_width())
+   except:
+      pass
+
    print('--------------------------------------------------------------------')
 
 #animating function
@@ -121,6 +174,7 @@ def animation(btn):
    global initial_zero
    global equal_state
    global ans_xpos
+   global line
 
    #remove answer label when user insert any sign ater last calculation to start a new calculation
    if equal_state is True:
@@ -224,6 +278,7 @@ def animation(btn):
          line.append('')
          line[-1] = Label(line_frame, text=str(btn), font=(SIGN_FONT), bg=SIGN_COLOR)
          line[-1].place(x = line[-2].winfo_x() + line[-2].winfo_width(), y=YPOS, height=H, width=TRIGONOMETRY_W)
+   
    #clear the line
    if btn == 'C':
       line_clear()
@@ -321,14 +376,32 @@ def ans():
    global res_list
    global ans_xpos
    global error_state
+   global equal_state
+   global res_show
    ans_xpos = INITIAL_ZERO_XPOS
 
    if equal_state is False:
       #convert res to a list
-      ans_btn_list = [str(i) for i in str(res_show)]
-      for i in ans_btn_list:
-         animation(i)
-         math(i)
+      ans_btn_list = [i for i in str(res_show)]
+      #convert it to int
+      for i in range(len(ans_btn_list)):
+         try:
+            ans_btn_list[i] = int(ans_btn_list[i])
+         except:
+            pass
+      for j in ans_btn_list:
+         
+         ans_btn_sign_w = line[-2].winfo_x() + line[-2].winfo_width()
+         math(j)
+         if type(j) == int: #for numbers
+            line.append('')
+            line[-1] = Label(line_frame, text=str(j), font=(SIGN_FONT), bg=SIGN_COLOR)
+            line[-1].place(x = ans_btn_sign_w, y=YPOS, height=H, width=NUM_W)
+         if j == '.':
+            line.append('')
+            line[-1] = Label(line_frame, text=str(j), font=(SIGN_FONT), anchor='e', bg=SIGN_COLOR)
+            line[-1].place(x = ans_btn_sign_w, y=YPOS, height=H, width=POINT_W)
+
 
    if equal_state is True:
       if error_state is False:
@@ -385,7 +458,7 @@ def equal_clear():
       except NameError:
          pass 
       try:
-         for i in range(len(line)):
+         for _ in range(len(line)):
             if len(line) > 1:
                line[-1].destroy()
                del line[-1]
@@ -399,7 +472,7 @@ def equal_clear():
          initial_zero.place(x=INITIAL_ZERO_XPOS, y=YPOS, height=H, width=NUM_W)
    elif error_state is True:
       error_label.destroy()
-      for i in range(len(line)):
+      for _ in range(len(line)):
          if len(line) > 1:
             line[-1].destroy()
             del line[-1]
@@ -415,7 +488,7 @@ def equal_clear():
 def line_clear():
    global res
    global initial_zero
-   for i in range(len(line)):
+   for _ in range(len(line)):
       if len(line) > 1:
          line[-1].destroy()
          del line[-1]
