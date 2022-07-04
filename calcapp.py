@@ -380,29 +380,6 @@ def ans():
    global res_show
    ans_xpos = INITIAL_ZERO_XPOS
 
-   # if equal_state is False:
-   #    #convert res to a list
-   #    ans_btn_list = [i for i in str(res_show)]
-   #    #convert it to int
-   #    for i in range(len(ans_btn_list)):
-   #       try:
-   #          ans_btn_list[i] = int(ans_btn_list[i])
-   #       except:
-   #          pass
-   #    for j in ans_btn_list:
-         
-   #       ans_btn_sign_w = line[-2].winfo_x() + line[-2].winfo_width()
-   #       math(j)
-   #       if type(j) == int: #for numbers
-   #          line.append('')
-   #          line[-1] = Label(line_frame, text=str(j), font=(SIGN_FONT), bg=SIGN_COLOR)
-   #          line[-1].place(x = ans_btn_sign_w, y=YPOS, height=H, width=NUM_W)
-   #       if j == '.':
-   #          line.append('')
-   #          line[-1] = Label(line_frame, text=str(j), font=(SIGN_FONT), anchor='e', bg=SIGN_COLOR)
-   #          line[-1].place(x = ans_btn_sign_w, y=YPOS, height=H, width=POINT_W)
-
-
    if equal_state is True:
       if error_state is False:
          #clear everything
