@@ -20,7 +20,7 @@ canvas.pack()
 #GLOBAL SUPPORT VARIABLES
 
 #list of all signs to show on the line
-sign_list = [
+all_sign_list = [
 0, 
 1, 
 2, 
@@ -175,15 +175,20 @@ def animation(btn):
    global equal_state
    global ans_xpos
    global line
+   global X_LINE_LIMIT
+
+   if equal_state == True:
+      X_LINE_LIMIT = 400
+   else:
+      X_LINE_LIMIT = 350
 
    #remove answer label when user insert any sign ater last calculation to start a new calculation
    if equal_state is True:
       if btn in standart_operation_sign_list or btn == '^2' or btn == '√(' or btn == '.':
          print("OPERATING WITH THE ANSWER...")
       else:
-         for i2 in sign_list:
-            if btn == i2:
-               equal_clear()       
+         if btn in all_sign_list:
+            equal_clear()
    #remove initial zero
    initial_zero.destroy()
 
@@ -209,7 +214,7 @@ def animation(btn):
       pass
 
    #adding signs to the line
-   for i in sign_list:
+   for i in all_sign_list:
       if btn == i and type(i) == int and line[-1].winfo_x() < X_LINE_LIMIT: #for numbers
          line.append('')
          line[-1] = Label(line_frame, text=str(btn), font=(SIGN_FONT), bg=SIGN_COLOR)
@@ -280,12 +285,13 @@ def animation(btn):
          line[-1].place(x = line[-2].winfo_x() + line[-2].winfo_width(), y=YPOS, height=H, width=TRIGONOMETRY_W)
    
    #clear the line
-   if btn == 'C':
+   if btn == 'C': #C button function
       line_clear()
       equal_clear()
    terminal()
+
    #remove last sign
-   if btn == '⌫':
+   if btn == '⌫': #⌫ button function
       if equal_state is False:
          backspace()
       elif equal_state is True: 
